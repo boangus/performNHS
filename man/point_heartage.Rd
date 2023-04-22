@@ -4,7 +4,7 @@
 \alias{point_heartage}
 \title{to calculate the heartage}
 \usage{
-point_heartage(gender, age, hdl, tc, sbp, treat, smoker, DM)
+point_heartage(dat, gender, age, hdl, tc, sbp, treat, smoker, DM)
 }
 \arguments{
 \item{gender}{chr}

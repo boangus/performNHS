@@ -21,9 +21,6 @@ female(age, hdl, tc, sbp, treat, smoker, DM)
 
 \item{DM}{chr}
 }
-\value{
-heartage(gender, point)
-}
 \description{
 to calculate the heartage
 }

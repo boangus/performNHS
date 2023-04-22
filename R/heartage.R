@@ -7,9 +7,6 @@
 #' @param treat chr
 #' @param smoker chr
 #' @param DM chr
-#'
-#' @return heartage(gender, point)
-#' @export heartage_gender
 
 female <- function(age, hdl, tc, sbp, treat, smoker, DM) {
 
@@ -81,7 +78,6 @@ female <- function(age, hdl, tc, sbp, treat, smoker, DM) {
 #' @param smoker chr
 #' @param DM chr
 #'
-#' @export heartage_gender
 male <- function(age, hdl, tc, sbp, treat, smoker, DM) {
     sbp_not=ifelse( treat %in% c("Yes", "yes","YES"),NA,sbp)
     sbp_treat=ifelse( treat %in% c("Yes", "yes","YES"),sbp,NA)
@@ -139,7 +135,6 @@ male <- function(age, hdl, tc, sbp, treat, smoker, DM) {
 #' @param gender chr
 #' @param point num
 #'
-#' @export heartage_gender
 #'
 heartage <- function(gender, point) {
     male <- c(30, 32, 34, 36, 38,40,42,45,48,51,54,57,60,64,68,72,76,80)
@@ -162,9 +157,10 @@ heartage <- function(gender, point) {
 #' @param smoker chr
 #' @param DM chr
 #'
-#' @export heartage_gender
-heartage_gender <- function(gender, age, hdl, tc, sbp_not, sbp_treat, smoker, DM) {
-    point <- ifelse(gender == "male", male(age, hdl, tc, sbp_not, sbp_treat, smoker, DM),
-                    ifelse(gender == "female", female(age, hdl, tc, sbp_not, sbp_treat, smoker, DM), NA))
-    return(heartage(gender, point))
+#' @export point_heartage
+point_heartage <- function(gender, age, hdl, tc, sbp, treat, smoker, DM) {
+    point <- ifelse(gender == "male", male(age, hdl, tc, sbp, sbp, smoker, DM),
+                    ifelse(gender == "female", female(age, hdl, tc, sbp, sbp, smoker, DM), NA))
+    HA <- heartage(gender, point)
+    return(list(point,HA))
 }

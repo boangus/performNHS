@@ -20,6 +20,7 @@
 #' @param Smoker chr
 #' @param diabetes chr
 #' @examples point("female",61,47,180,124,NA,"yes","no")
+#' point("maile",61,47,180,124,NA,"yes","no")
 #' df <- data.frame(
 #'         Gender = c("male", "female", "male","female","male"),
 #'         Age = c(55, 60, 65,61,53),
@@ -38,113 +39,55 @@
 
 point <- function(Gender,Age, HDL, TC, SBP, Treat, Smoker, diabetes){
     female <- function(age, hdl, tc, sbp, treat, smoker, DM) {
+        # Create lookup tables
+        age_table <- c(0, 2, 4, 5, 7, 8, 9, 10, 11, 12)
+        hdl_table <- c(2, 1, 0, -1, -2)
+        tc_table <- c(0, 1, 3, 4, 5)
+        sbp_not_table <- c(-3, 0, 1, 2, 4, 5)
+        sbp_tre_table <- c(-1, 2, 3, 5, 6, 7)
+        smoker_table <- c(0, 3)
+        DM_table <- c(0, 4)
 
-        sbp_not=ifelse( treat %in% c("Yes", "yes","YES"),NA,sbp)
-        sbp_treat=ifelse( treat %in% c("Yes", "yes","YES"),sbp,NA)
+        # Compute points for each variable
+        age_points <- age_table[cut(age, c(30, 35, 40, 45, 50, 55, 60, 65, 70, Inf),right=F)]
+        hdl_points <- hdl_table[cut(hdl, c(-Inf, 35, 45, 50, 60, Inf),right=F)]
+        tc_points <- tc_table[cut(tc, c(-Inf, 160, 200, 240, 280, Inf),right=F)]
+        sbp_points <- ifelse(treat %in% c("Yes", "yes", "YES"),
+                             sbp_tre_table[cut(sbp, c(-Inf, 120, 130, 140, 150,160, Inf),right=F)],
+                             sbp_not_table[cut(sbp, c(-Inf, 120, 130, 140, 150,160, Inf),right=F)]
+                             )
+        smoker_points <- smoker_table[ifelse(smoker %in% c("No", "no", "NO"), 1, 2)]
+        DM_points <- DM_table[ifelse(DM %in% c("No", "no", "NO"), 1, 2)]
 
-        point <- sum(
-            dplyr::case_when(
-                age > 30 & age <= 34 ~ 0,
-                age <= 39 ~ 2,
-                age <= 44 ~ 4,
-                age <= 49 ~ 5,
-                age <= 54 ~ 7,
-                age <= 59 ~ 8,
-                age <= 64 ~ 9,
-                age <= 69 ~ 10,
-                age <= 74 ~ 11,
-                TRUE ~ 0,
-                F~NA
-            ),
-            dplyr::case_when(
-                hdl >= 60 ~ -2,
-                hdl >= 50 ~ -1,
-                hdl >= 45 ~ 0,
-                hdl >= 35 ~ 1,
-                TRUE ~ 2,
-                F~NA
-            ),
-            dplyr::case_when(
-                tc < 160 ~ 0,
-                tc < 200 ~ 1,
-                tc < 240 ~ 3,
-                tc < 280 ~ 4,
-                TRUE ~ 5,
-                F~NA
-            ),
-            dplyr::case_when(
-                F~NA,
-                sbp_not < 120 ~ -3,
-                sbp_treat < 120 ~ -1,
-                sbp_not < 130 ~ 0,
-                sbp_not < 140 ~ 1,
-                sbp_not < 150 | sbp_treat < 130 ~ 2,
-                sbp_treat < 140 ~ 3,
-                sbp_not < 160 ~ 4,
-                sbp_not >=160 | sbp_treat < 150 ~ 5,
-                sbp_treat < 160 ~ 6,
-                TRUE ~ 7
-            ),
-            dplyr::case_when(
-                smoker %in% c("No", "no","NO")~0,
-                smoker %in% c("Yes", "yes","YES")~3,
-                F ~ NA),
-            dplyr::case_when(
-                DM %in% c("No", "no","NO")~0,
-                DM %in% c("Yes", "yes","YES")~4,
-                F ~ NA)
-        )
+        # Compute total points
+        point <- sum(age_points, hdl_points, tc_points, sbp_points, smoker_points, DM_points, na.rm = TRUE)
+
         return(point)
     }
     male <- function(age, hdl, tc, sbp, treat, smoker, DM) {
-        sbp_not=ifelse( treat %in% c("Yes", "yes","YES"),NA,sbp)
-        sbp_treat=ifelse( treat %in% c("Yes", "yes","YES"),sbp,NA)
+        # Create lookup tables
+        age_table <- c(0, 2, 5, 6, 8, 10, 11, 12, 14, 15)
+        hdl_table <- c(2, 1, 0, -1, -2)
+        tc_table <- c(0, 1, 2, 3, 4)
+        sbp_not_table <- c(-2, 0, 1, 2, 3)
+        sbp_tre_table <- c( 0, 2, 3, 4, 5)
+        smoker_table <- c(0, 4)
+        DM_table <- c(0, 3)
 
-        point <- sum(
-            dplyr::case_when(
-                age > 30 & age <= 34 ~ 0,
-                age <= 39 ~ 2,
-                age <= 44 ~ 5,
-                age <= 49 ~ 6,
-                age <= 54 ~ 8,
-                age <= 59 ~ 10,
-                age <= 64 ~ 11,
-                age <= 69 ~ 12,
-                age <= 74 ~ 14,
-                TRUE ~ 15
-            ),
-            dplyr::case_when(
-                hdl >= 60 ~ -2,
-                hdl >= 50 ~ -1,
-                hdl >= 45 ~ 0,
-                hdl >= 35 ~ 1,
-                TRUE ~ 2
-            ),
-            dplyr::case_when(
-                tc < 160 ~ 0,
-                tc < 200 ~ 1,
-                tc < 240 ~ 2,
-                tc < 280 ~ 3,
-                TRUE ~ 4
-            ),
-            dplyr::case_when(
-                sbp_not < 120 ~ -2,
-                sbp_not < 130 | sbp_treat < 120 ~ 0,
-                sbp_not < 140 ~ 1,
-                sbp_not < 160 | sbp_treat < 130 ~ 2,
-                sbp_not>=160  | sbp_treat < 140 ~ 3,
-                sbp_treat < 160 ~ 4,
-                TRUE ~ 5
-            ),
-            dplyr::case_when(
-                smoker %in% c("No", "no","NO")~0,
-                smoker %in% c("Yes", "yes","YES")~4,
-                F ~ NA),
-            dplyr::case_when(
-                DM %in% c("No", "no","NO")~0,
-                DM %in% c("Yes", "yes","YES")~3,
-                F ~ NA)
-        )
+        # Compute points for each variable
+        age_points <- age_table[cut(age, c(30, 35, 40, 45, 50, 55, 60, 65, 70, 75, Inf),right=F)]
+        hdl_points <- hdl_table[cut(hdl, c(-Inf, 35, 45, 50, 60, Inf),right=F)]
+        tc_points <- tc_table[cut(tc, c(-Inf, 160, 200, 240, 280, Inf),right=F)]
+        sbp_points <- ifelse(treat %in% c("Yes", "yes", "YES"),
+                             sbp_tre_table[cut(sbp, c(-Inf, 120, 130, 140, 160, Inf),right=F)],
+                             sbp_not_table[cut(sbp, c(-Inf, 120, 130, 140, 160, Inf),right=F)]
+                             )
+        smoker_points <- smoker_table[ifelse(smoker %in% c("No", "no", "NO"), 1, 2)]
+        DM_points <- DM_table[ifelse(DM %in% c("No", "no", "NO"), 1, 2)]
+
+        # Compute total points
+        point <- sum(age_points, hdl_points, tc_points, sbp_points, smoker_points, DM_points, na.rm = TRUE)
+
         return(point)
     }
     ifelse(Gender=="female",female(Age, HDL, TC, SBP, Treat, Smoker, diabetes),
@@ -157,16 +100,18 @@ point <- function(Gender,Age, HDL, TC, SBP, Treat, Smoker, diabetes){
 #' @param point num
 #'
 heartage <- function(gender, point) {
-    male <- c(30, 32, 34, 36, 38,40,42,45,48,51,54,57,60,64,68,72,76,80)
-    female <- c(31, 34, 36, 39,42,45,48,51,55,59,64,68,73,79,80)
+    male <- c(30, 32, 34, 36, 38, 40, 42, 45, 48, 51, 54, 57, 60, 64, 68, 72, 76, 80)
+    female <- c(31, 34, 36, 39, 42, 45, 48, 51, 55, 59, 64, 68, 73, 79, 80)
 
-    HA <- dplyr::case_when(
-        gender == "male" & point >= 0 & point <= 17~male[point + 1],
-        gender == "female" & point >= 1 & point <= 15~female[point],
-        point<1~29,
-        T~81)
+    if (gender == "male") {
+        ha <- ifelse(point >= 0 & point <= 17, male[as.integer(point) + 1], 81)
+    } else if (gender == "female") {
+        ha <- ifelse(point >= 1 & point <= 15, female[as.integer(point)], 81)
+    } else {
+        ha <- 81
+    }
 
-    return(HA)
+    return(ha)
 }
 
 
@@ -188,10 +133,10 @@ point_heartage <- function(dat,gender, age, hdl, tc, sbp, treat, smoker, DM){
     dat <- dat |> dplyr::rowwise() |>
         dplyr::mutate(point=point({{gender}},{{age}}, {{hdl}}, {{tc}}, {{sbp}}, {{treat}}, {{smoker}}, {{DM}}),
                       heartage=heartage({{gender}},point),
-                      risk=dplyr::case_when({{gender}}=="male"~ifelse(point>14,">20%","<20%"),
-                                            {{gender}}=="female"~ifelse(point>17,">20%","<20%")))
-
+                      risk = ifelse({{gender}} == "male" & point > 14, ">20%",
+                                    ifelse({{gender}} == "female" & point > 17, ">20%", "<20%")))
 
     return(dat)
 }
+
 

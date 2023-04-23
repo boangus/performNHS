@@ -42,6 +42,7 @@ using the Framingham model. The model is based on the following parameters:
 }
 \examples{
 point("female",61,47,180,124,NA,"yes","no")
+point("maile",61,47,180,124,NA,"yes","no")
 df <- data.frame(
         Gender = c("male", "female", "male","female","male"),
         Age = c(55, 60, 65,61,53),

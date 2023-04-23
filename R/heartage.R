@@ -114,7 +114,13 @@ heartage <- function(gender, point) {
     return(ha)
 }
 
-
+heartrisk <- function(gender, point) {
+    male <- c("<1","1.1","1.4","1.6","1.9","2.3","2.8","3.3","3.9","4.7","5.6","6.7","7.9","9.4","11.2","13.2","15.6","18.4","21.6","25.3","39.4",">30")
+    female <- c("<1","1.2","1.5","1.7","2","2.4","2.8","3.3","3.9","4.5","5.3","6.3","7.3","8.6","10","11.7","13.7","15.9","18.5","21.5","24.8","28.5",">30")
+    risk <- ifelse(gender=="female",female[cut(point, c(-Inf,-1:20, Inf))],
+                   male[cut(point, c(-Inf,-2:17, Inf),right = F)])
+    return(risk)
+}
 
 #' to calculate the heartage
 #'
@@ -131,10 +137,11 @@ heartage <- function(gender, point) {
 
 point_heartage <- function(dat,gender, age, hdl, tc, sbp, treat, smoker, DM){
     dat <- dat |> dplyr::rowwise() |>
-        dplyr::mutate(point=point({{gender}},{{age}}, {{hdl}}, {{tc}}, {{sbp}}, {{treat}}, {{smoker}}, {{DM}}),
-                      heartage=heartage({{gender}},point),
-                      risk = ifelse({{gender}} == "male" & point > 14, ">20%",
-                                    ifelse({{gender}} == "female" & point > 17, ">20%", "<20%")))
+        dplyr::mutate(point=point(tolower({{gender}}),{{age}}, {{hdl}}, {{tc}}, {{sbp}}, {{treat}}, {{smoker}}, {{DM}}),
+                      heartage=heartage(tolower({{gender}}),point),
+                      risk=heartrisk(tolower({{gender}}),point),
+                      risk_20 = ifelse(tolower({{gender}}) == "male" & point > 14, ">20%",
+                                    ifelse(tolower({{gender}}) == "female" & point > 17, ">20%", "<20%")))
 
     return(dat)
 }
